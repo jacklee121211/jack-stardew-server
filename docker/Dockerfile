@@ -16,10 +16,10 @@ LABEL maintainer="truemanlive" \
       description="Stardew Valley dedicated server with instant sleep functionality" \
       version="1.0.21"
 
-# Use Chinese mirrors for faster package downloads
-# 使用国内镜像源加速软件包下载
-RUN sed -i 's@http://.*archive.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list && \
-    sed -i 's@http://.*security.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list
+# Use Chinese mirrors for faster package downloads (HTTP to avoid certificate issues)
+# 使用国内镜像源加速软件包下载（使用 HTTP 避免证书问题）
+RUN sed -i 's@http://.*archive.ubuntu.com@http://mirrors.aliyun.com@g' /etc/apt/sources.list && \
+    sed -i 's@http://.*security.ubuntu.com@http://mirrors.aliyun.com@g' /etc/apt/sources.list
 
 # Enable 32-bit architecture for SteamCMD
 # 启用32位架构支持以安装SteamCMD
