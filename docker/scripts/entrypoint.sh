@@ -378,17 +378,45 @@ log_step "Step 4: Installing mods..."
 
 mkdir -p /home/steam/stardewvalley/Mods
 
-if [ -d "/home/steam/preinstalled-mods" ]; then
-    log_info "Installing preinstalled mods..."
-    rm -rf /home/steam/stardewvalley/Mods
-    mkdir -p /home/steam/stardewvalley/Mods
-    cp -r /home/steam/preinstalled-mods/* /home/steam/stardewvalley/Mods/
+# Check if mods have been installed before (using marker file)
+# 检查是否已经安装过 mods（使用标记文件）
+MODS_MARKER="/home/steam/stardewvalley/Mods/.mods_installed"
 
-    log_info "Installed mods:"
-    log_info "已安装模组："
-    ls -1 /home/steam/stardewvalley/Mods/ | while read mod; do
+if [ -f "$MODS_MARKER" ]; then
+    log_info "Mods already initialized. Skipping installation."
+    log_info "Mods 已初始化。跳过安装。"
+    log_info "Current mods / 当前模组："
+    ls -1 /home/steam/stardewvalley/Mods/ | grep -v "^\.mods_installed$" | while read mod; do
         log_info "  ✓ $mod"
     done
+    log_info ""
+    log_info "To reset mods, delete the marker file:"
+    log_info "要重置模组，请删除标记文件："
+    log_info "  rm /home/steam/stardewvalley/Mods/.mods_installed"
+else
+    log_info "First time setup: Installing preinstalled mods..."
+    log_info "首次设置：安装预装模组..."
+    
+    if [ -d "/home/steam/preinstalled-mods" ]; then
+        # Only copy if Mods directory is empty or only contains the marker file
+        # 仅在 Mods 目录为空或仅包含标记文件时复制
+        cp -r /home/steam/preinstalled-mods/* /home/steam/stardewvalley/Mods/
+        
+        # Create marker file to indicate mods have been installed
+        # 创建标记文件表示 mods 已安装
+        touch "$MODS_MARKER"
+        
+        log_info "Installed mods:"
+        log_info "已安装模组："
+        ls -1 /home/steam/stardewvalley/Mods/ | grep -v "^\.mods_installed$" | while read mod; do
+            log_info "  ✓ $mod"
+        done
+        log_info ""
+        log_info "Mods directory is now under your control!"
+        log_info "Mods 目录现在由您控制！"
+        log_info "You can add/remove mods freely. They will persist across restarts."
+        log_info "您可以自由添加/删除模组。它们在重启后会保留。"
+    fi
 fi
 
 # Setup virtual display
