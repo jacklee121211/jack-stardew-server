@@ -1,0 +1,76 @@
+{
+	"Format": "2.0.0",
+	"Changes": [
+		{
+			"Action": "EditData",
+			"Target": "platinummyr.CustomBackpackFramework/dictionary",
+			"Entries": {
+				"24": {
+					"name": "大型背包",
+					"cost": 2000,
+					"texturePath": "platinummyr.CPMoreBackpacks/backpacks",
+					"textureRect": 
+					{
+						"X":0,
+						"Y":0,
+						"Width": 12,
+						"Height":14
+					}
+				},
+				"36": {
+					"name": "豪华背包",
+					"cost": 10000,
+					"texturePath": "platinummyr.CPMoreBackpacks/backpacks",
+					"textureRect": 
+					{
+						"X":12,
+						"Y":0,
+						"Width": 12,
+						"Height":14
+					}
+				},
+				"50": {
+					"name": "巨型背包",
+					"cost": 20000,
+					"texturePath": "platinummyr.CPMoreBackpacks/backpacks",
+					"textureRect": 
+					{
+						"X":24,
+						"Y":0,
+						"Width": 12,
+						"Height":14
+					}
+				},
+				"200": {
+					"name": "虚空背包",
+					"cost": 50000,
+					"texturePath": "platinummyr.CPMoreBackpacks/backpacks",
+					"textureRect": 
+					{
+						"X":36,
+						"Y":0,
+						"Width": 12,
+						"Height":14
+					}
+				},
+				"1000": {
+					"name": "银河背包",
+					"cost": 1000000,
+					"texturePath": "platinummyr.CPMoreBackpacks/backpacks",
+					"textureRect": 
+					{
+						"X":48,
+						"Y":0,
+						"Width": 12,
+						"Height":14
+					}
+				}
+			}
+		},
+		{
+			"Action": "Load",
+			"Target": "platinummyr.CPMoreBackpacks/backpacks",
+			"FromFile": "assets/backpacks.png"
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+  "Name": "FarmSleepPatch_TMXL",
+  "Author": "YourName",
+  "Version": "1.0.0",
+  "Description": "Adds a visible sleep zone on the farm",
+  "UniqueID": "YourName.FarmSleepPatch_TMXL",
+  "MinimumApiVersion": "3.0.0",
+  "UpdateKeys": [],
+  "ContentPackFor": {
+    "UniqueID": "Platonymous.TMXLoader"
+  }
+}

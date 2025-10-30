@@ -1,0 +1,18 @@
+{
+    "Name": "Giant backpack",
+    "Author": "xc333222",
+    "Version": "0.0.1",
+    "Description": "Giant backpack",
+    "UniqueID": "xc333222.Giantbackpack",
+    "MinimumApiVersion": "4.0.0",
+    "ContentPackFor": {
+       "UniqueID": "Pathoschild.ContentPatcher"
+    },
+    "Dependencies": [
+      {
+        "UniqueID": "platinummyr.CustomBackpackFramework",
+        "MinimumVersion": "1.0.0"
+      }
+    ],
+    "UpdateKeys": [ "Nexus:21591" ]
+ }

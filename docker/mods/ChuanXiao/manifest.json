@@ -1,0 +1,10 @@
+{
+  "Name": "ChuanXiao", 
+  "Author": "JAC", 
+  "Version": "1.0.0",
+  "Description": "在多人模式中，按快捷键选择一个玩家并直接传送到他们身边。",
+  "UniqueID": "JAC.ChuanXiaoTeleport", 
+  "EntryDll": "ChuanXiao.dll", 
+  "MinimumApiVersion": "4.0.0", 
+  "UpdateKeys": []
+}

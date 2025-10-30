@@ -37,18 +37,10 @@ Setting up a **Stardew Valley dedicated server** has never been easier! With **o
 - **24/7 Dedicated Server** ⚡ - Runs independently without requiring the host to be online
 - **Docker Compose** 🐳 - Easy deployment and management
 - **Resource Efficient** 💪 - Runs smoothly on servers with only 2GB RAM
-- **Auto-Save Loading** 💾 - Automatically loads your save on server restart
+- **Enhanced Gameplay** 💾 - Multiple quality-of-life mods included
 - **VNC Remote Access** 🖥️ - Built-in VNC for easy first-time setup
-- **Instant Sleep** 🛏️ - Bonus feature: Players can sleep at any time without waiting
-- **Hidden Host** 👻 - Host player is automatically hidden for seamless gameplay
-
-<div align="center">
-
-![Instant Sleep Demo](https://raw.githubusercontent.com/truman-world/puppy-stardew-server/main/screenshots/game/instant-sleep-demo.gif)
-
-*Bonus Feature: Instant sleep - Click bed → Sleep instantly → New day begins!*
-
-</div>
+- **Server Management** 🛏️ - Built-in server management and automation tools
+- **Community Mods** 👻 - Popular mods pre-installed and ready to use
 
 ### Quick Start (2 Options)
 
@@ -187,9 +179,9 @@ After the server starts, you need to create or load a save file **once**:
    - Load an existing save
 
 3. **Once loaded:**
-   - The ServerAutoLoad mod will remember your save
-   - Future restarts will auto-load this save
+   - Your save is ready for multiplayer
    - You can disconnect from VNC
+   - For future restarts, reconnect via VNC to load the save again
 
 4. **Players can now connect!**
    - Open Stardew Valley
@@ -201,11 +193,19 @@ After the server starts, you need to create or load a save file **once**:
 
 #### Pre-installed Mods
 
-| Mod | Version | Purpose |
-|-----|---------|---------|
-| **AutoHideHost** | v1.0.0 | Custom mod - Hides host player and enables instant sleep |
-| **Always On Server** | v1.20.3 | Keeps server running 24/7 without host player |
-| **ServerAutoLoad** | v1.2.1 | Custom mod - Automatically loads your save on startup |
+| Mod | Purpose |
+|-----|---------|
+| **Stardew Multiplayer Server Mod** | Dedicated server support with 24/7 operation |
+| **ContentPatcher** | Framework for content packs and customization |
+| **GenericModConfigMenu** | In-game mod configuration interface |
+| **ConsoleCommands** | Server management and console commands |
+| **ConvenientInventory** | Inventory management enhancements |
+| **SaveBackup** | Automatic save file backup |
+| **YetAnotherAutoWatering** | Automatic crop watering |
+| **Giant backpack** | Expanded inventory capacity |
+| **TMXLoader** | Custom map support |
+| **Trading** | Enhanced trading features |
+| **And more...** | See `docker/mods/MODS_LIST.md` for full list |
 
 All mods are pre-configured and ready to use!
 
@@ -383,14 +383,13 @@ docker compose up -d
 Mod configs are in `/home/steam/stardewvalley/Mods/` inside the container:
 
 ```bash
-# Edit AutoHideHost config
-docker exec puppy-stardew nano /home/steam/stardewvalley/Mods/AutoHideHost/config.json
+# List all installed mods
+docker exec puppy-stardew ls /home/steam/stardewvalley/Mods/
 
-# Edit Always On Server config
-docker exec puppy-stardew nano /home/steam/stardewvalley/Mods/AlwaysOnServer/config.json
+# Edit a specific mod's config (example)
+docker exec puppy-stardew nano /home/steam/stardewvalley/Mods/ConvenientInventory/config.json
 
-# Edit ServerAutoLoad config
-docker exec puppy-stardew nano /home/steam/stardewvalley/Mods/ServerAutoLoad/config.json
+# Or use VNC to configure mods in-game via GenericModConfigMenu
 ```
 
 After editing, restart the server:
@@ -461,16 +460,13 @@ This saves ~50MB RAM.
 - ✅ You MUST own Stardew Valley on Steam
 - ✅ Game files are downloaded via YOUR Steam account
 - ✅ This is NOT a piracy tool
-- ✅ Mods follow their original licenses:
-  - Always On Server: [GPL-3.0](https://github.com/funny-snek/Always-On-Server-for-Multiplayer)
-  - ServerAutoLoad: MIT (custom mod for this project)
-  - AutoHideHost: MIT (custom mod for this project)
+- ✅ Mods follow their original licenses (see individual mod pages for details)
 
 ### 🙏 Credits
 
 - **Stardew Valley** by [ConcernedApe](https://www.stardewvalley.net/)
 - **SMAPI** by [Pathoschild](https://smapi.io/)
-- **Always On Server** by funny-snek & Zuberii
+- **All mod authors** for their amazing contributions to the community
 - **Docker** by Docker, Inc.
 
 ### 🤝 Contributing
@@ -513,18 +509,10 @@ If this project helps you, consider giving it a star! ⭐
 - **24/7 专用服务器** ⚡ - 服务器独立运行，不需要房主在线
 - **Docker Compose** 🐳 - 轻松部署和管理
 - **资源高效** 💪 - 2GB 内存服务器也能流畅运行
-- **自动加载存档** 💾 - 重启容器，存档自动加载
+- **增强游戏体验** 💾 - 包含多个优质模组
 - **VNC 远程访问** 🖥️ - 内置 VNC，首次设置超简单
-- **即时睡眠** 🛏️ - 附加功能：玩家随时可以睡觉，无需等待
-- **隐藏房主** 👻 - 房主玩家自动隐藏，零干扰
-
-<div align="center">
-
-![即时睡眠演示](https://raw.githubusercontent.com/truman-world/puppy-stardew-server/main/screenshots/game/instant-sleep-demo.gif)
-
-*附加功能：即时睡眠 - 点击床 → 立即睡眠 → 新的一天开始！*
-
-</div>
+- **服务器管理** 🛏️ - 内置服务器管理和自动化工具
+- **社区模组** 👻 - 预装热门模组，开箱即用
 
 ### 快速开始（2 种方式）
 
@@ -663,9 +651,9 @@ docker attach puppy-stardew
    - 加载现有存档
 
 3. **加载完成后：**
-   - ServerAutoLoad 模组会记住您的存档
-   - 以后重启会自动加载此存档
+   - 您的存档已准备好多人游戏
    - 您可以断开 VNC 连接了
+   - 以后重启时，重新通过 VNC 加载存档即可
 
 4. **玩家现在可以连接了！**
    - 打开星露谷物语
@@ -677,11 +665,19 @@ docker attach puppy-stardew
 
 #### 预装模组
 
-| 模组 | 版本 | 用途 |
-|-----|------|------|
-| **AutoHideHost** | v1.0.0 | 自定义模组 - 隐藏房主玩家并启用即时睡眠 |
-| **Always On Server** | v1.20.3 | 保持服务器 24/7 运行，不需要房主在线 |
-| **ServerAutoLoad** | v1.2.1 | 自定义模组 - 启动时自动加载存档 |
+| 模组 | 用途 |
+|-----|------|
+| **Stardew Multiplayer Server Mod** | 专用服务器支持，24/7 运行 |
+| **ContentPatcher** | 内容补丁框架，支持自定义内容 |
+| **GenericModConfigMenu** | 游戏内模组配置界面 |
+| **ConsoleCommands** | 服务器管理和控制台命令 |
+| **ConvenientInventory** | 背包管理增强 |
+| **SaveBackup** | 自动存档备份 |
+| **YetAnotherAutoWatering** | 自动浇水 |
+| **Giant backpack** | 扩展背包容量 |
+| **TMXLoader** | 自定义地图支持 |
+| **Trading** | 增强交易功能 |
+| **更多...** | 查看 `docker/mods/MODS_LIST.md` 获取完整列表 |
 
 所有模组都已预配置，开箱即用！
 
@@ -859,14 +855,13 @@ docker compose up -d
 模组配置文件在容器内的 `/home/steam/stardewvalley/Mods/` 目录：
 
 ```bash
-# 编辑 AutoHideHost 配置
-docker exec puppy-stardew nano /home/steam/stardewvalley/Mods/AutoHideHost/config.json
+# 列出所有已安装的模组
+docker exec puppy-stardew ls /home/steam/stardewvalley/Mods/
 
-# 编辑 Always On Server 配置
-docker exec puppy-stardew nano /home/steam/stardewvalley/Mods/AlwaysOnServer/config.json
+# 编辑特定模组的配置（示例）
+docker exec puppy-stardew nano /home/steam/stardewvalley/Mods/ConvenientInventory/config.json
 
-# 编辑 ServerAutoLoad 配置
-docker exec puppy-stardew nano /home/steam/stardewvalley/Mods/ServerAutoLoad/config.json
+# 或使用 VNC 通过 GenericModConfigMenu 在游戏内配置模组
 ```
 
 编辑后重启服务器：
@@ -937,16 +932,13 @@ docker compose up -d
 - ✅ 您必须在 Steam 上拥有星露谷物语
 - ✅ 游戏文件通过您的 Steam 账户下载
 - ✅ 这不是盗版工具
-- ✅ 模组遵循其原始许可证：
-  - Always On Server：[GPL-3.0](https://github.com/funny-snek/Always-On-Server-for-Multiplayer)
-  - ServerAutoLoad：MIT（本项目自定义模组）
-  - AutoHideHost：MIT（本项目自定义模组）
+- ✅ 模组遵循其原始许可证（详见各模组页面）
 
 ### 🙏 致谢
 
 - **星露谷物语** by [ConcernedApe](https://www.stardewvalley.net/)
 - **SMAPI** by [Pathoschild](https://smapi.io/)
-- **Always On Server** by funny-snek & Zuberii
+- **所有模组作者** 感谢他们为社区做出的精彩贡献
 - **Docker** by Docker, Inc.
 
 ### 🤝 贡献

@@ -1,81 +1,100 @@
 # Puppy Stardew Server - Included Mods
 
-This document lists all the mods included in the Puppy Stardew Server Docker image.
+这个服务器包含以下自定义 Mods，用于增强游戏体验。
 
-## Mod List
+## Mod 列表
 
-### 1. Always On Server
-- **Author**: funny-snek & Zuberii
-- **Version**: 1.20.3-unofficial.5-mikkoperkele
-- **Description**: A Headless server mod.
-- **Unique ID**: mikko.Always_On_Server
-- **Nexus Link**: https://www.nexusmods.com/stardewvalley/mods/2677
-- **Files**:
-  - Always On Server.dll (44K)
-  - config.json (909 bytes)
-  - manifest.json (305 bytes)
-  - ConnectionsCount.txt (1 byte)
-  - data/ directory with 3 JSON files (111 bytes each)
+### 核心功能 Mods
 
-### 2. Server Auto Load
-- **Author**: Puppy-Stardew
-- **Version**: 1.1.0
-- **Description**: Save management and auto-load helper for dedicated servers. Automatically loads the most recent save on startup.
-- **Unique ID**: puppystardew.ServerAutoLoad
-- **Files**:
-  - ServerAutoLoad.dll (24K)
-  - config.json (45 bytes)
-  - manifest.json (354 bytes)
-- **Features**:
-  - **Automatic save loading** - No manual VNC loading required!
-  - Automatic save file detection and sorting by date
-  - Auto-loads most recent save or configured save
-  - Save monitoring and logging
-  - Configuration tracking
+1. **Stardew Multiplayer Server Mod**
+   - 多人服务器核心模组
+   - 支持 24/7 无人运行
+   - 提供服务器管理功能
 
-### 3. AutoHideHost
-- **Author**: AI Developer
-- **Version**: 1.0.0
-- **Description**: Automatically hides the host player in multiplayer servers and provides seamless day-night transitions without waiting prompts.
-- **Unique ID**: AIdev.AutoHideHost
-- **Files**:
-  - AutoHideHost.dll
-  - config.json
-  - manifest.json
+2. **ContentPatcher**
+   - 内容补丁框架
+   - 其他很多 mod 的依赖
 
-## Installation
+3. **GenericModConfigMenu**
+   - 通用 Mod 配置菜单
+   - 方便在游戏内配置其他 mod
 
-These mods are pre-installed in the Docker image and will be automatically loaded when the server starts. Each mod's configuration can be customized by mounting a volume to the `/home/steam/stardewvalley/Mods/` directory in the container.
+### 游戏增强 Mods
 
-## Mod Requirements
+4. **ConsoleCommands**
+   - 控制台命令支持
+   - 方便服务器管理
 
-- **SMAPI**: All mods require SMAPI (Stardew Modding API) version 4.0.0 or higher
-- **Game Version**: Stardew Valley 1.6+
+5. **SaveBackup**
+   - 自动存档备份
+   - 防止存档丢失
 
-## Notes
+6. **TMXLoader**
+   - TMX 地图加载器
+   - 支持自定义地图
 
-- **Always On Server**: Enables headless 24/7 server operation
-- **Server Auto Load**: Helps manage and monitor saves in headless mode. Displays save information and loading instructions on startup
-- **AutoHideHost**: Ensures the host player remains hidden and handles day/night transitions seamlessly with instant sleep functionality
+### 便利功能 Mods
 
-## Usage
+7. **ConvenientInventory**
+   - 便捷背包管理
+   - 自动整理、快速堆叠等功能
 
-### First Time Setup
+8. **Giant backpack**
+   - 巨型背包
+   - 增加背包容量
 
-1. Start the container
-2. **For existing saves**: Server Auto Load will automatically detect and load the most recent save
-3. **For new saves**: Connect via VNC (port 5900) to create a new farm
-4. Once loaded, the game runs continuously
+9. **YetAnotherAutoWatering**
+   - 自动浇水
+   - 减少重复劳动
 
-### After Container Restart
+10. **Trading**
+    - 交易功能增强
+    - 玩家间交易更方便
 
-- **Automatic!** Server Auto Load will automatically load the most recent save
-- No manual VNC loading required
-- The game continues running 24/7 via Always On Server
+11. **SelfServe**
+    - 自助服务
+    - 提供便利功能
 
-### Manual Configuration (Optional)
+### 地图相关 Mods
 
-If you want to load a specific save instead of the most recent one:
-1. Edit `/home/steam/stardewvalley/Mods/ServerAutoLoad/config.json`
-2. Set `"SaveFileName": "your_save_name_here"`
-3. Restart the container
+12. **FarmSleepPatch_TMXL**
+    - 农场睡眠补丁
+    - TMX 地图相关
+
+### 其他 Mods
+
+13. **ChuanXiao**
+    - 自定义功能模组
+
+14. **AutoLoadGame** (已禁用)
+    - 自动加载游戏
+    - 当前版本中已禁用
+
+## 说明
+
+所有 mods 已预装并配置好，容器启动时会自动加载。
+
+## Mod 要求
+
+- **SMAPI**: 4.1.10 或更高版本
+- **游戏版本**: Stardew Valley 1.6+
+
+## 使用说明
+
+### 首次设置
+
+1. 启动容器
+2. 通过 VNC (端口 5900) 连接创建或加载存档
+3. 存档加载后游戏会持续运行
+
+### 容器重启后
+
+- 容器重启后，通过 VNC 重新加载存档即可
+- 所有 mod 会自动加载
+
+## 配置
+
+如需自定义 mod 配置，可以通过以下方式：
+
+1. 通过 VNC 连接，在游戏内使用 GenericModConfigMenu 配置
+2. 直接编辑 `/home/steam/stardewvalley/Mods/` 目录下的 config.json 文件

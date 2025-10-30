@@ -1,0 +1,11 @@
+﻿{
+  "Name": "Convenient Inventory",
+  "Author": "gaussfire",
+  "Version": "1.5.3-unofficial.2-despairscent",
+  "Description": "Adds convenience features to the player's inventory, such as quick stack to nearby chests and favorited items.",
+  "UniqueID": "gaussfire.ConvenientInventory",
+  "EntryDll": "ConvenientInventory.dll",
+  "MinimumApiVersion": "4.1.0",
+  "MinimumGameVersion": "1.6.9",
+  "UpdateKeys": [ "Nexus:30204" ]
+}

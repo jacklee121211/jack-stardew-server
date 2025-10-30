@@ -62,7 +62,7 @@ RUN wget -qO- 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.t
 
 # Download and install SMAPI (Stardew Modding API)
 # 下载并安装 SMAPI（星露谷模组API）
-RUN wget -qO smapi.zip 'https://github.com/Pathoschild/SMAPI/releases/download/4.3.2/SMAPI-4.3.2-installer.zip' && \
+RUN wget -qO smapi.zip 'https://github.com/Pathoschild/SMAPI/releases/download/4.1.10/SMAPI-4.1.10-installer.zip' && \
     unzip -q smapi.zip -d smapi && \
     rm smapi.zip
 

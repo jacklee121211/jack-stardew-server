@@ -144,16 +144,14 @@ check_mods_loaded() {
     # Check last 100 lines of logs for mod loading messages
     mod_count=$(docker logs --tail 100 $CONTAINER_NAME 2>&1 | grep -c "Loaded.*mod" || true)
 
-    if [ "$mod_count" -ge 3 ]; then
+    if [ "$mod_count" -gt 0 ]; then
         print_success "Mods loaded (detected $mod_count mods)"
 
-        # List loaded mods
-        print_info "Checking for core mods..."
-        docker logs --tail 200 $CONTAINER_NAME 2>&1 | grep "Loaded.*mod" | grep -i "AlwaysOnServer\|AutoHideHost\|ServerAutoLoad" | while read -r line; do
-            echo "  ${CYAN}→${NC} $(echo "$line" | grep -oP 'Loaded \K.*')"
+        # List some loaded mods
+        print_info "Recently loaded mods:"
+        docker logs --tail 200 $CONTAINER_NAME 2>&1 | grep "Loaded.*mod" | head -5 | while read -r line; do
+            echo "  ${CYAN}→${NC} $(echo "$line" | grep -oP 'Loaded \K.*' || echo "$line")"
         done
-    elif [ "$mod_count" -gt 0 ]; then
-        print_warning "Some mods loaded ($mod_count), but expected at least 3"
     else
         print_warning "No mods detected yet (server might still be starting)"
         print_info "Wait a few minutes and check again."

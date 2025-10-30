@@ -1,0 +1,10 @@
+{
+  "Format": "1.26.0",
+  "Changes": [
+    {
+      "Action": "Load",
+      "Target": "Maps/Farm",
+      "FromFile": "Maps/FarmSleepPatch.tmx"
+    }
+  ]
+}
