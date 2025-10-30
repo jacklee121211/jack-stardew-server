@@ -97,9 +97,9 @@ check_docker() {
 download_files() {
     print_step "步骤 2: 下载配置文件..."
 
-    if [ ! -d "puppy-stardew-server" ]; then
+    if [ ! -d "jack-stardew-server" ]; then
         print_info "克隆仓库..."
-        if git clone https://github.com/truman-world/puppy-stardew-server.git; then
+        if git clone https://github.com/jacklee121211/jack-stardew-server.git; then
             print_success "仓库已克隆！"
         else
             print_error "克隆失败！请检查网络连接。"
@@ -109,7 +109,7 @@ download_files() {
         print_info "目录已存在，跳过克隆"
     fi
 
-    cd puppy-stardew-server || exit 1
+    cd jack-stardew-server || exit 1
 }
 
 configure_steam() {
