@@ -60,7 +60,7 @@ curl -sSL https://raw.githubusercontent.com/truman-world/puppy-stardew-server/ma
 **中文版 (Chinese Version):**
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/truman-world/puppy-stardew-server/main/quick-start-zh.sh | bash
+curl -sSL https://raw.githubusercontent.com/jacklee121211/jack-stardew-server/main/quick-start-zh.sh | bash
 ```
 
 The script will:
