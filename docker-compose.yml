@@ -15,7 +15,10 @@
 
 services:
   stardew-server:
-    image: truemanlive/puppy-stardew-server:v1.0.21
+    build:
+      context: ./docker
+      dockerfile: Dockerfile
+    image: jack-stardew-server:latest
     container_name: puppy-stardew
     restart: unless-stopped  # Keep running after Steam Guard
     # Interactive mode for Steam Guard
