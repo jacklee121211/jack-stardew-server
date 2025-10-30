@@ -75,10 +75,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.5'
+          cpus: '3'
           memory: 2G
         reservations:
-          memory: 1G
+          memory: 2G
 
     # Health check
     # 健康检查
