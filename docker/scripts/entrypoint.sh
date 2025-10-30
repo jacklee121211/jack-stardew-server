@@ -419,6 +419,35 @@ else
     fi
 fi
 
+# Fix Mods directory permissions (always run to ensure correct permissions)
+# 修复 Mods 目录权限（每次都运行以确保权限正确）
+log_info "Checking and fixing Mods directory permissions..."
+log_info "检查并修复 Mods 目录权限..."
+
+if [ -d "/home/steam/stardewvalley/Mods" ]; then
+    # Fix ownership to steam user
+    # 修复所有权为 steam 用户
+    chown -R steam:steam /home/steam/stardewvalley/Mods 2>/dev/null || true
+    
+    # Fix directory permissions (rwxr-xr-x = 755)
+    # 修复目录权限
+    find /home/steam/stardewvalley/Mods -type d -exec chmod 755 {} \; 2>/dev/null || true
+    
+    # Fix file permissions (rw-r--r-- = 644)
+    # 修复文件权限
+    find /home/steam/stardewvalley/Mods -type f -exec chmod 644 {} \; 2>/dev/null || true
+    
+    # Fix DLL permissions to be executable (rwxr-xr-x = 755)
+    # 修复 DLL 文件为可执行
+    find /home/steam/stardewvalley/Mods -type f -name "*.dll" -exec chmod 755 {} \; 2>/dev/null || true
+    
+    log_info "✓ Mods directory permissions fixed"
+    log_info "✓ Mods 目录权限已修复"
+else
+    log_warn "Mods directory not found, skipping permission fix"
+    log_warn "未找到 Mods 目录，跳过权限修复"
+fi
+
 # Setup virtual display
 log_step "Step 5: Starting virtual display..."
 
