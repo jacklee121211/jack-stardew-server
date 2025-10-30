@@ -60,11 +60,11 @@ USER steam
 RUN wget -qO- 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz' | \
     tar zxvf - -C /home/steam/steamcmd
 
-# Download and install SMAPI (Stardew Modding API)
-# 下载并安装 SMAPI（星露谷模组API）
-RUN wget -qO smapi.zip 'https://github.com/Pathoschild/SMAPI/releases/download/4.1.10/SMAPI-4.1.10-installer.zip' && \
-    unzip -q smapi.zip -d smapi && \
-    rm smapi.zip
+# Copy and install SMAPI (Stardew Modding API) - Using local file to avoid GitHub download
+# 复制并安装 SMAPI（星露谷模组API）- 使用本地文件避免 GitHub 下载
+COPY SMAPI-4.1.10-installer.zip /home/steam/smapi.zip
+RUN unzip -q /home/steam/smapi.zip -d /home/steam/smapi && \
+    rm /home/steam/smapi.zip
 
 # Copy pre-configured mods to a temporary location
 # 将预配置的模组复制到临时位置
