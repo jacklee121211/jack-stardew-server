@@ -47,10 +47,14 @@ services:
       # 代理设置 - 可选（用于加速下载）
       # Use Docker gateway IP to access host proxy (Clash Meta on port 7890)
       # 使用 Docker 网关 IP 访问宿主机代理（Clash Meta 在 7890 端口）
-      - HTTP_PROXY=${HTTP_PROXY:-http://172.17.0.1:7890}
-      - HTTPS_PROXY=${HTTPS_PROXY:-http://172.17.0.1:7890}
-      - http_proxy=${HTTP_PROXY:-http://172.17.0.1:7890}
-      - https_proxy=${HTTPS_PROXY:-http://172.17.0.1:7890}
+      # Note: Set HTTP_PROXY="" in .env to disable proxy if Steam login fails
+      # 注意：如果 Steam 登录失败，可在 .env 中设置 HTTP_PROXY="" 来禁用代理
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-${HTTP_PROXY:-}}
+      - http_proxy=${HTTP_PROXY:-}
+      - https_proxy=${HTTPS_PROXY:-${HTTP_PROXY:-}}
+      - NO_PROXY=localhost,127.0.0.1,steamcommunity.com,steampowered.com
+      - no_proxy=localhost,127.0.0.1,steamcommunity.com,steampowered.com
 
     # Port mappings
     # 端口映射
