@@ -544,9 +544,9 @@ while [ $RESTART_COUNT -lt $MAX_RESTARTS ]; do
     if [ $EXIT_CODE -eq 0 ]; then
         log_info "Server exited normally (exit code 0)."
         log_info "服务器正常退出 (退出代码 0)。"
-        log_info "If you stopped the server intentionally, you can restart it via VNC or restart the container."
-        log_info "如果您有意停止服务器，可以通过 VNC 或重启容器来重新启动。"
-        break
+        log_info "Restarting server in $RESTART_DELAY seconds..."
+        log_info "服务器将在 $RESTART_DELAY 秒后重启..."
+        # Continue loop to restart server
     else
         log_error "Server crashed or exited with code $EXIT_CODE"
         log_error "服务器崩溃或退出，退出代码: $EXIT_CODE"
@@ -554,9 +554,23 @@ while [ $RESTART_COUNT -lt $MAX_RESTARTS ]; do
         if [ $RESTART_COUNT -ge $MAX_RESTARTS ]; then
             log_error "Maximum restart attempts reached. Please check server logs."
             log_error "达到最大重启次数。请检查服务器日志。"
-            exit 1
+            log_error "Container will keep running. You can restart the server manually via VNC."
+            log_error "容器将继续运行。您可以通过 VNC 手动重启服务器。"
+            # Don't exit, keep container alive but don't restart server
+            log_info "Waiting... (Container stays alive, but server won't auto-restart)"
+            log_info "等待中... (容器保持运行，但服务器不会自动重启)"
+            while true; do
+                sleep 3600  # Keep container alive
+            done
         fi
     fi
+done
+
+# If loop exits for some reason, keep container alive
+log_warn "Server restart loop exited. Container will stay alive."
+log_warn "服务器重启循环已退出。容器将保持运行。"
+while true; do
+    sleep 3600  # Keep container alive
 done
 
 fi
