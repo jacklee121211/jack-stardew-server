@@ -1,0 +1,34 @@
+# 基于原作者镜像的增量构建
+# Incremental build based on original author's image
+
+# 使用原作者镜像作为基础
+FROM truemanlive/puppy-stardew-server:latest
+
+LABEL maintainer="jacklee121211" \
+      description="Jack's customized Stardew Valley server based on Puppy Stardew Server" \
+      version="1.0.0-custom"
+
+# 切换到 root 用户以进行修改
+USER root
+
+# 如果您有自定义的 mods，可以在这里添加
+# COPY mods/ /home/steam/preinstalled-mods/
+# RUN chown -R steam:steam /home/steam/preinstalled-mods
+
+# 如果您有自定义的启动脚本，可以在这里替换
+# COPY scripts/entrypoint.sh /home/steam/entrypoint.sh
+# RUN chmod +x /home/steam/entrypoint.sh
+
+# 如果您有其他自定义配置，在这里添加
+# 例如：修改 SMAPI 配置、添加自定义工具等
+
+# 保持原有的设置
+EXPOSE 24642/udp 5900/tcp
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+    CMD pgrep -f "StardewModdingAPI" > /dev/null || exit 1
+
+# 使用原有的启动脚本
+ENTRYPOINT ["/home/steam/entrypoint.sh"]
+
+

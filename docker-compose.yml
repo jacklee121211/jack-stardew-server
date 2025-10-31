@@ -15,10 +15,14 @@
 
 services:
   stardew-server:
-    build:
-      context: ./docker
-      dockerfile: Dockerfile
-    image: jack-stardew-server:latest
+    # 使用 Docker Hub 预构建镜像，加速部署
+    # Use pre-built Docker Hub image for faster deployment
+    image: jacklee121211/jack-stardew-server:latest
+    # 如果需要本地构建，请取消以下注释
+    # Uncomment below for local build
+    # build:
+    #   context: ./docker
+    #   dockerfile: Dockerfile
     container_name: puppy-stardew
     restart: unless-stopped  # Keep running after Steam Guard
     # Interactive mode for Steam Guard
