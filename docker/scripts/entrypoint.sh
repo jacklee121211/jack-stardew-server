@@ -515,8 +515,48 @@ log_warn ""
 log_warn "FIRST RUN: You must create or load a save via VNC!"
 log_warn "首次运行：您必须通过 VNC 创建或加载存档！"
 log_warn ""
+log_info "Server will auto-restart if it crashes or is stopped."
+log_info "如果服务器崩溃或停止，将自动重启。"
 
 cd /home/steam/stardewvalley
-exec ./StardewModdingAPI --server
+
+# Auto-restart loop: keep server running even if it crashes
+MAX_RESTARTS=10
+RESTART_COUNT=0
+RESTART_DELAY=5
+
+while [ $RESTART_COUNT -lt $MAX_RESTARTS ]; do
+    if [ $RESTART_COUNT -gt 0 ]; then
+        log_warn "Server exited. Restarting in $RESTART_DELAY seconds... (Attempt $RESTART_COUNT/$MAX_RESTARTS)"
+        log_warn "服务器已退出。$RESTART_DELAY 秒后重启... (尝试 $RESTART_COUNT/$MAX_RESTARTS)"
+        sleep $RESTART_DELAY
+    fi
+    
+    log_info "Starting StardewModdingAPI server..."
+    log_info "正在启动 StardewModdingAPI 服务器..."
+    
+    # Run server (not using exec, so we can handle exit)
+    ./StardewModdingAPI --server
+    
+    EXIT_CODE=$?
+    RESTART_COUNT=$((RESTART_COUNT + 1))
+    
+    if [ $EXIT_CODE -eq 0 ]; then
+        log_info "Server exited normally (exit code 0)."
+        log_info "服务器正常退出 (退出代码 0)。"
+        log_info "If you stopped the server intentionally, you can restart it via VNC or restart the container."
+        log_info "如果您有意停止服务器，可以通过 VNC 或重启容器来重新启动。"
+        break
+    else
+        log_error "Server crashed or exited with code $EXIT_CODE"
+        log_error "服务器崩溃或退出，退出代码: $EXIT_CODE"
+        
+        if [ $RESTART_COUNT -ge $MAX_RESTARTS ]; then
+            log_error "Maximum restart attempts reached. Please check server logs."
+            log_error "达到最大重启次数。请检查服务器日志。"
+            exit 1
+        fi
+    fi
+done
 
 fi
