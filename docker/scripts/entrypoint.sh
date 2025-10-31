@@ -507,12 +507,12 @@ if [ "$ENABLE_VNC" = "true" ]; then
 
     # Write password to file (x11vnc requires file for background mode)
     # 将密码写入文件（x11vnc 后台模式需要文件）
-    VNC_PASSWD_FILE=/tmp/vncpasswd
+    VNC_PASSWD_FILE=/home/steam/.vncpasswd
     echo -n "$VNC_PASSWORD" > "$VNC_PASSWD_FILE"
     chmod 600 "$VNC_PASSWD_FILE"
 
     openbox &
-    x11vnc -display :99 -forever -shared -passwdfile "$VNC_PASSWD_FILE" -rfbport 5900 &
+    x11vnc -display :99 -forever -shared -noshm -passwdfile "$VNC_PASSWD_FILE" -rfbport 5900 &
 
     log_info "==================================="
     log_info "VNC Server Started / VNC 服务器已启动"
