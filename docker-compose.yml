@@ -43,6 +43,15 @@ services:
       - ENABLE_VNC=${ENABLE_VNC:-true}
       - VNC_PASSWORD=${VNC_PASSWORD:-stardew123}
 
+      # Proxy settings - OPTIONAL (for faster downloads)
+      # 代理设置 - 可选（用于加速下载）
+      # Use Docker gateway IP to access host proxy (Clash Meta on port 7890)
+      # 使用 Docker 网关 IP 访问宿主机代理（Clash Meta 在 7890 端口）
+      - HTTP_PROXY=${HTTP_PROXY:-http://172.17.0.1:7890}
+      - HTTPS_PROXY=${HTTPS_PROXY:-http://172.17.0.1:7890}
+      - http_proxy=${HTTP_PROXY:-http://172.17.0.1:7890}
+      - https_proxy=${HTTPS_PROXY:-http://172.17.0.1:7890}
+
     # Port mappings
     # 端口映射
     ports:
