@@ -84,7 +84,10 @@ USER steam
 # 复制启动脚本
 USER root
 COPY --chown=root:root scripts/entrypoint.sh /home/steam/entrypoint.sh
-RUN chmod +x /home/steam/entrypoint.sh
+# Fix Windows line endings (CRLF -> LF) for Linux compatibility
+# 修复 Windows 行结束符以兼容 Linux
+RUN sed -i 's/\r$//' /home/steam/entrypoint.sh && \
+    chmod +x /home/steam/entrypoint.sh
 
 # Start as root to fix permissions, entrypoint will switch to steam user
 # 以 root 启动以修复权限，entrypoint 会切换到 steam 用户
