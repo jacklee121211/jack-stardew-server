@@ -544,11 +544,39 @@ EOF
         
         # Alternative: use printf to pipe password
         # 备用方法：使用 printf 管道输入密码
-        printf "%s\n%s\n" "$VNC_PASSWORD" "$VNC_PASSWORD" | x11vnc -storepasswd "$VNC_PASSWD_FILE" 2>/dev/null || {
+        printf "%s\n%s\n" "$VNC_PASSWORD" "$VNC_PASSWORD" | x11vnc -storepasswd /dev/stdin "$VNC_PASSWD_FILE" 2>/dev/null || {
             # Last resort: try yes command
             # 最后手段：尝试 yes 命令
-            yes "$VNC_PASSWORD" | head -n 2 | x11vnc -storepasswd "$VNC_PASSWD_FILE" 2>/dev/null || true
+            yes "$VNC_PASSWORD" | head -n 2 | x11vnc -storepasswd /dev/stdin "$VNC_PASSWD_FILE" 2>/dev/null || true
         }
+    fi
+    
+    # Verify password file size (encrypted password file should be larger than plain text)
+    # 验证密码文件大小（加密的密码文件应该比明文更大）
+    if [ -f "$VNC_PASSWD_FILE" ]; then
+        FILE_SIZE=$(stat -f%z "$VNC_PASSWD_FILE" 2>/dev/null || stat -c%s "$VNC_PASSWD_FILE" 2>/dev/null || echo "0")
+        PASSWORD_LENGTH=${#VNC_PASSWORD}
+        if [ "$FILE_SIZE" -le "$PASSWORD_LENGTH" ]; then
+            log_error "VNC password file size ($FILE_SIZE bytes) is suspiciously small. File may be corrupted."
+            log_error "VNC 密码文件大小 ($FILE_SIZE 字节) 异常小。文件可能已损坏。"
+            log_warn "Attempting to recreate password file..."
+            log_warn "尝试重新创建密码文件..."
+            rm -f "$VNC_PASSWD_FILE"
+            # Try one more time with expect
+            # 再试一次 expect 方法
+            expect << EOF2 >/dev/null 2>&1 || true
+set timeout 10
+spawn x11vnc -storepasswd "$VNC_PASSWORD" "$VNC_PASSWD_FILE"
+expect {
+    -re ".*password:" {
+        send "$VNC_PASSWORD\r"
+        exp_continue
+    }
+    eof
+}
+EOF2
+            chmod 600 "$VNC_PASSWD_FILE"
+        fi
     fi
     
     chmod 600 "$VNC_PASSWD_FILE"
