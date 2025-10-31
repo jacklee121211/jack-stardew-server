@@ -52,15 +52,51 @@ setup_proxy() {
         git config --global https.proxy "$HTTPS_PROXY" 2>/dev/null || true
     fi
     
-    # 配置 Docker 代理（如果需要）
-    if [ -n "$HTTP_PROXY" ] && [ -d "/etc/docker" ]; then
+    # 配置 Docker daemon 代理（关键！）
+    if [ -n "$HTTP_PROXY" ] && command -v systemctl &> /dev/null; then
         print_info "检测到 Docker，配置 Docker daemon 代理..."
-        if [ ! -f "/etc/docker/daemon.json" ]; then
-            sudo mkdir -p /etc/docker
-            echo '{}' | sudo tee /etc/docker/daemon.json > /dev/null
+        
+        # 获取代理 URL（Docker daemon 需要宿主机 IP，不是 Docker 网关 IP）
+        DOCKER_PROXY_URL="$PROXY_URL"
+        
+        # 如果代理地址是 Docker 网关 IP，转换为宿主机 IP
+        if echo "$DOCKER_PROXY_URL" | grep -q "172.17.0.1"; then
+            # 尝试获取宿主机实际 IP 或使用 127.0.0.1
+            HOST_IP=$(ip route get 8.8.8.8 2>/dev/null | awk '{print $7; exit}' | grep -v "^$" || echo "127.0.0.1")
+            DOCKER_PROXY_URL=$(echo "$DOCKER_PROXY_URL" | sed "s|172.17.0.1|$HOST_IP|")
+            print_info "Docker daemon 使用宿主机代理地址: $DOCKER_PROXY_URL"
         fi
-        # 注意：这需要重启 Docker 才能生效，我们先提示用户
-        print_warning "Docker 代理需要重启 Docker 才能生效，如果拉取镜像失败，请手动配置 /etc/docker/daemon.json"
+        
+        # 创建 systemd 服务覆盖目录
+        sudo mkdir -p /etc/systemd/system/docker.service.d
+        
+        # 备份现有配置
+        if [ -f "/etc/systemd/system/docker.service.d/http-proxy.conf" ]; then
+            sudo cp /etc/systemd/system/docker.service.d/http-proxy.conf /etc/systemd/system/docker.service.d/http-proxy.conf.backup
+        fi
+        
+        # 创建代理配置文件
+        sudo tee /etc/systemd/system/docker.service.d/http-proxy.conf > /dev/null << EOF
+[Service]
+Environment="HTTP_PROXY=$DOCKER_PROXY_URL"
+Environment="HTTPS_PROXY=$DOCKER_PROXY_URL"
+Environment="NO_PROXY=localhost,127.0.0.1,*.local"
+EOF
+        
+        print_success "Docker daemon 代理已配置: $DOCKER_PROXY_URL"
+        print_warning "正在重新加载 systemd 并重启 Docker 服务..."
+        
+        # 重新加载 systemd 配置
+        sudo systemctl daemon-reload
+        
+        # 重启 Docker 服务
+        if sudo systemctl restart docker; then
+            print_success "Docker 服务已重启，代理已生效！"
+            # 等待 Docker 完全启动
+            sleep 3
+        else
+            print_error "Docker 服务重启失败！请手动运行: sudo systemctl restart docker"
+        fi
     fi
 }
 
