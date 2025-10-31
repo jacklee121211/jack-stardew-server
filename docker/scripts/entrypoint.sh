@@ -512,21 +512,44 @@ if [ "$ENABLE_VNC" = "true" ]; then
     # Use expect to create password file (x11vnc -storepasswd requires interactive input)
     # 使用 expect 创建密码文件（x11vnc -storepasswd 需要交互式输入）
     log_info "Creating VNC password file..."
+    rm -f "$VNC_PASSWD_FILE" 2>/dev/null || true
+    
+    # Try expect method first
+    # 首先尝试 expect 方法
     expect << EOF >/dev/null 2>&1 || true
-set timeout 5
+set timeout 10
 spawn x11vnc -storepasswd "$VNC_PASSWORD" "$VNC_PASSWD_FILE"
 expect {
-    "Enter password:" {
+    -re "Enter.*password:" {
         send "$VNC_PASSWORD\r"
         exp_continue
     }
-    "Verify password:" {
+    -re "Verify.*password:" {
+        send "$VNC_PASSWORD\r"
+        exp_continue
+    }
+    -re "password:" {
         send "$VNC_PASSWORD\r"
         exp_continue
     }
     eof
 }
 EOF
+    
+    # If expect failed, try alternative method using printf
+    # 如果 expect 失败，尝试使用 printf 的备用方法
+    if [ ! -f "$VNC_PASSWD_FILE" ] || [ ! -s "$VNC_PASSWD_FILE" ]; then
+        log_warn "expect method failed, trying alternative method..."
+        log_warn "expect 方法失败，尝试备用方法..."
+        
+        # Alternative: use printf to pipe password
+        # 备用方法：使用 printf 管道输入密码
+        printf "%s\n%s\n" "$VNC_PASSWORD" "$VNC_PASSWORD" | x11vnc -storepasswd "$VNC_PASSWD_FILE" 2>/dev/null || {
+            # Last resort: try yes command
+            # 最后手段：尝试 yes 命令
+            yes "$VNC_PASSWORD" | head -n 2 | x11vnc -storepasswd "$VNC_PASSWD_FILE" 2>/dev/null || true
+        }
+    fi
     
     chmod 600 "$VNC_PASSWD_FILE"
     
