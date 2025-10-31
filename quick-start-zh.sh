@@ -8,6 +8,62 @@
 # 不在错误时退出 - 我们手动处理错误
 set +e
 
+# =============================================================================
+# 代理配置 - 自动检测并使用 Clash Meta 代理
+# =============================================================================
+setup_proxy() {
+    # 默认代理地址（Clash Meta 默认端口）
+    PROXY_HOST="${PROXY_HOST:-127.0.0.1}"
+    PROXY_PORT="${PROXY_PORT:-7890}"
+    PROXY_URL="http://${PROXY_HOST}:${PROXY_PORT}"
+    
+    # 检测代理是否可用
+    if command -v curl &> /dev/null; then
+        if curl -s --connect-timeout 2 --proxy "$PROXY_URL" http://www.google.com > /dev/null 2>&1; then
+            export HTTP_PROXY="$PROXY_URL"
+            export HTTPS_PROXY="$PROXY_URL"
+            export http_proxy="$PROXY_URL"
+            export https_proxy="$PROXY_URL"
+            print_info "检测到代理可用，已配置: $PROXY_URL"
+            return 0
+        fi
+    fi
+    
+    # 如果检测失败，询问用户是否使用代理
+    print_warning "未检测到可用的代理，或代理未运行"
+    ask_question "是否配置代理？(如果 Clash Meta 运行在其他地址，请输入，否则直接回车跳过)"
+    read -r proxy_input
+    
+    if [ -n "$proxy_input" ]; then
+        PROXY_URL="$proxy_input"
+        export HTTP_PROXY="$PROXY_URL"
+        export HTTPS_PROXY="$PROXY_URL"
+        export http_proxy="$PROXY_URL"
+        export https_proxy="$PROXY_URL"
+        print_info "已配置代理: $PROXY_URL"
+    else
+        print_info "跳过代理配置"
+        unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy
+    fi
+    
+    # 配置 Git 代理
+    if [ -n "$HTTP_PROXY" ]; then
+        git config --global http.proxy "$HTTP_PROXY" 2>/dev/null || true
+        git config --global https.proxy "$HTTPS_PROXY" 2>/dev/null || true
+    fi
+    
+    # 配置 Docker 代理（如果需要）
+    if [ -n "$HTTP_PROXY" ] && [ -d "/etc/docker" ]; then
+        print_info "检测到 Docker，配置 Docker daemon 代理..."
+        if [ ! -f "/etc/docker/daemon.json" ]; then
+            sudo mkdir -p /etc/docker
+            echo '{}' | sudo tee /etc/docker/daemon.json > /dev/null
+        fi
+        # 注意：这需要重启 Docker 才能生效，我们先提示用户
+        print_warning "Docker 代理需要重启 Docker 才能生效，如果拉取镜像失败，请手动配置 /etc/docker/daemon.json"
+    fi
+}
+
 # 输出颜色
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -99,11 +155,22 @@ download_files() {
 
     if [ ! -d "jack-stardew-server" ]; then
         print_info "克隆仓库..."
-        if git clone https://github.com/jacklee121211/jack-stardew-server.git; then
-            print_success "仓库已克隆！"
+        # 使用代理克隆（如果已配置）
+        if [ -n "$HTTP_PROXY" ]; then
+            print_info "使用代理克隆: $HTTP_PROXY"
+            if git -c http.proxy="$HTTP_PROXY" -c https.proxy="$HTTPS_PROXY" clone https://github.com/jacklee121211/jack-stardew-server.git; then
+                print_success "仓库已克隆！"
+            else
+                print_error "克隆失败！请检查网络连接和代理设置。"
+                exit 1
+            fi
         else
-            print_error "克隆失败！请检查网络连接。"
-            exit 1
+            if git clone https://github.com/jacklee121211/jack-stardew-server.git; then
+                print_success "仓库已克隆！"
+            else
+                print_error "克隆失败！请检查网络连接。"
+                exit 1
+            fi
         fi
     else
         print_info "目录已存在，跳过克隆"
@@ -120,30 +187,47 @@ configure_steam() {
     echo ""
 
     if [ -f ".env" ]; then
-        ask_question ".env 文件已存在。是否要重新配置？(y/n)"
-        read -r reconfigure
-        if [[ ! $reconfigure =~ ^[Yy]$ ]]; then
-            print_info "使用现有 .env 文件"
-            return
-        fi
+        print_info ".env 文件已存在，跳过创建"
+        return
     fi
 
-    cp .env.example .env
+    # 创建 .env 文件模板（不包含敏感信息）
+    if [ -f ".env.example" ]; then
+        cp .env.example .env
+        print_success ".env 模板文件已创建！"
+        echo ""
+        print_warning "请稍后手动编辑 .env 文件，填入您的 Steam 账号和密码"
+        echo ""
+        echo "编辑命令："
+        echo -e "  ${CYAN}nano .env${NC}"
+        echo ""
+        echo "或使用以下命令快速创建："
+        echo -e "  ${CYAN}cat > .env << 'EOF'${NC}"
+        echo "  STEAM_USERNAME=your_steam_username"
+        echo "  STEAM_PASSWORD=your_steam_password"
+        echo "  ENABLE_VNC=true"
+        echo "  VNC_PASSWORD=stardew123"
+        echo "  HTTP_PROXY=http://172.17.0.1:7890"
+        echo "  HTTPS_PROXY=http://172.17.0.1:7890"
+        echo -e "  ${CYAN}EOF${NC}"
+    else
+        print_error ".env.example 文件不存在！"
+        print_info "创建基本的 .env 模板..."
+        cat > .env << 'EOF'
+# Steam 凭证（必需）
+STEAM_USERNAME=your_steam_username
+STEAM_PASSWORD=your_steam_password
 
-    echo ""
-    ask_question "请输入您的 Steam 用户名："
-    read -r steam_username
+# VNC 设置（可选）
+ENABLE_VNC=true
+VNC_PASSWORD=stardew123
 
-    echo ""
-    ask_question "请输入您的 Steam 密码："
-    read -rs steam_password
-    echo ""
-
-    # 更新 .env 文件
-    sed -i "s/^STEAM_USERNAME=.*/STEAM_USERNAME=$steam_username/" .env
-    sed -i "s/^STEAM_PASSWORD=.*/STEAM_PASSWORD=$steam_password/" .env
-
-    print_success "Steam 配置已保存！"
+# 代理设置（可选）
+HTTP_PROXY=http://172.17.0.1:7890
+HTTPS_PROXY=http://172.17.0.1:7890
+EOF
+        print_success ".env 模板文件已创建！"
+    fi
 }
 
 setup_directories() {
@@ -169,7 +253,29 @@ start_server() {
     print_step "步骤 5: 启动服务器..."
     echo ""
 
+    # 检查 .env 文件是否存在
+    if [ ! -f ".env" ]; then
+        print_error ".env 文件不存在！"
+        echo ""
+        echo "请先创建 .env 文件并填入 Steam 账号信息："
+        echo -e "  ${CYAN}nano .env${NC}"
+        exit 1
+    fi
+
+    # 检查 .env 文件中是否已配置 Steam 凭证
+    if ! grep -q "^STEAM_USERNAME=.*[^=]$" .env || ! grep -q "^STEAM_PASSWORD=.*[^=]$" .env; then
+        print_warning ".env 文件中 Steam 凭证未配置完整！"
+        echo ""
+        echo "请先编辑 .env 文件，填入 Steam 用户名和密码："
+        echo -e "  ${CYAN}nano .env${NC}"
+        exit 1
+    fi
+
     print_info "拉取 Docker 镜像（可能需要几分钟）..."
+    # Docker pull 会使用 docker-compose.yml 中配置的代理环境变量
+    if [ -n "$HTTP_PROXY" ]; then
+        print_info "使用代理拉取镜像: $HTTP_PROXY"
+    fi
     if docker compose pull 2>&1 | grep -q "Error"; then
         print_warning "拉取镜像时出现错误，尝试启动..."
     fi
@@ -221,6 +327,30 @@ print_next_steps() {
     echo ""
     echo -e "${GREEN}${BOLD}🎉 设置完成！接下来该做什么：${NC}"
     echo ""
+
+    # 检查是否已配置 .env
+    if [ ! -f ".env" ] || ! grep -q "^STEAM_USERNAME=.*[^=]$" .env || ! grep -q "^STEAM_PASSWORD=.*[^=]$" .env; then
+        echo -e "${YELLOW}${BOLD}⚠️  重要：请先配置 Steam 账号！${NC}"
+        echo ""
+        echo "创建或编辑 .env 文件："
+        echo -e "  ${CYAN}nano .env${NC}"
+        echo ""
+        echo "或使用以下命令快速创建："
+        echo -e "${CYAN}cat > .env << 'EOF'"
+        echo "STEAM_USERNAME=bjym07140"
+        echo "STEAM_PASSWORD=Lijiaqi1202.+."
+        echo "ENABLE_VNC=true"
+        echo "VNC_PASSWORD=stardew123"
+        echo "HTTP_PROXY=http://172.17.0.1:7890"
+        echo "HTTPS_PROXY=http://172.17.0.1:7890"
+        echo -e "EOF${NC}"
+        echo ""
+        echo "配置完成后，运行："
+        echo -e "  ${CYAN}docker-compose down && docker-compose up -d${NC}"
+        echo ""
+        echo -e "${BOLD}════════════════════════════════════════${NC}"
+        echo ""
+    fi
 
     echo -e "${BOLD}1. 监控下载进度：${NC}"
     echo "   docker logs -f puppy-stardew"
@@ -279,6 +409,7 @@ print_next_steps() {
 
 main() {
     print_header
+    setup_proxy  # 首先配置代理
     check_docker
     download_files
     configure_steam
