@@ -79,6 +79,9 @@ services:
       - ./data/saves:/home/steam/.config/StardewValley:rw
       - ./data/game:/home/steam/stardewvalley:rw
       - ./data/steam:/home/steam/Steam:rw
+      # Mount entrypoint.sh for hot-reload (no rebuild needed)
+      # 挂载 entrypoint.sh 以便热更新（无需重建镜像）
+      - ./docker/scripts/entrypoint.sh:/home/steam/entrypoint.sh:ro
 
     # Resource limits
     # 资源限制
