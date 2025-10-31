@@ -66,11 +66,18 @@ if [ "$(id -u)" -eq 0 ]; then
 
     log_info "✓ Permissions fixed. Switching to steam user..."
     # Switch to steam user using gosu (preserves stdin/stdout/stderr and env vars)
+    # Pass proxy environment variables to steam user
     exec gosu steam env \
         STEAM_USERNAME="$STEAM_USERNAME" \
         STEAM_PASSWORD="$STEAM_PASSWORD" \
         ENABLE_VNC="$ENABLE_VNC" \
         VNC_PASSWORD="$VNC_PASSWORD" \
+        HTTP_PROXY="${HTTP_PROXY:-}" \
+        HTTPS_PROXY="${HTTPS_PROXY:-}" \
+        http_proxy="${http_proxy:-${HTTP_PROXY:-}}" \
+        https_proxy="${https_proxy:-${HTTPS_PROXY:-}}" \
+        NO_PROXY="${NO_PROXY:-localhost,127.0.0.1,*.local}" \
+        no_proxy="${no_proxy:-${NO_PROXY:-localhost,127.0.0.1,*.local}}" \
         /home/steam/entrypoint.sh
 fi
 
