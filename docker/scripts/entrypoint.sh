@@ -265,94 +265,95 @@ if [ "$GAME_DOWNLOADED" = false ]; then
     # If no Steam Guard, proceed with normal download
     else
         log_info "Starting Steam authentication and download..."
-    timeout 900 /home/steam/steamcmd/steamcmd.sh \
-        +force_install_dir /home/steam/stardewvalley \
-        +login "$STEAM_USERNAME" "$STEAM_PASSWORD" \
-        +app_update 413150 validate \
-        +quit 2>&1 | tee /tmp/steam_download.log
-
-    # Check the result
-    if grep -q "Success! App '413150' fully installed" /tmp/steam_download.log; then
-        log_info "Game downloaded successfully!"
-        log_info "游戏下载完成！"
-        GAME_DOWNLOADED=true
-    elif grep -q "Two-factor code" /tmp/steam_download.log || \
-         grep -q "Guard code" /tmp/steam_download.log || \
-         grep -q "This computer has not been authenticated" /tmp/steam_download.log; then
-
-        # Steam Guard is required - handle it interactively
-        log_warn "Steam Guard authentication required!"
-        log_warn "需要 Steam 令牌验证！"
-
-        log_steam ""
-        log_steam "========================================"
-        log_steam "STEAM GUARD CODE REQUIRED"
-        log_steam "需要输入 STEAM 令牌验证码"
-        log_steam "========================================"
-        log_steam ""
-        log_steam "Please use docker attach to input code:"
-        log_steam "请使用 docker attach 输入验证码："
-        log_steam "  docker attach puppy-stardew"
-        log_steam ""
-        log_steam "After attaching, you will see the Steam Guard prompt."
-        log_steam "连接后，您将看到 Steam Guard 提示。"
-        log_steam ""
-        log_steam "Enter your Steam Guard code and press ENTER"
-        log_steam "输入您的 Steam 令牌验证码并按回车"
-        log_steam ""
-        log_steam "To detach after entering code:"
-        log_steam "输入验证码后要分离："
-        log_steam "Press Ctrl+P, then Ctrl+Q"
-        log_steam "========================================"
-
-        # Run SteamCMD in interactive mode for Steam Guard
-        log_info "Starting Steam authentication with Steam Guard..."
-        /home/steam/steamcmd/steamcmd.sh \
+        timeout 900 /home/steam/steamcmd/steamcmd.sh \
             +force_install_dir /home/steam/stardewvalley \
             +login "$STEAM_USERNAME" "$STEAM_PASSWORD" \
             +app_update 413150 validate \
-            +quit
+            +quit 2>&1 | tee /tmp/steam_download.log
 
-        # Check if download was successful
-        if [ ! -f "/home/steam/stardewvalley/StardewValley" ]; then
-            log_error "Game download failed after Steam Guard verification"
-            log_error "Steam Guard 验证后游戏下载失败"
+        # Check the result
+        if grep -q "Success! App '413150' fully installed" /tmp/steam_download.log; then
+            log_info "Game downloaded successfully!"
+            log_info "游戏下载完成！"
+            GAME_DOWNLOADED=true
+        elif grep -q "Two-factor code" /tmp/steam_download.log || \
+             grep -q "Guard code" /tmp/steam_download.log || \
+             grep -q "This computer has not been authenticated" /tmp/steam_download.log; then
+
+            # Steam Guard is required - handle it interactively
+            log_warn "Steam Guard authentication required!"
+            log_warn "需要 Steam 令牌验证！"
+
+            log_steam ""
+            log_steam "========================================"
+            log_steam "STEAM GUARD CODE REQUIRED"
+            log_steam "需要输入 STEAM 令牌验证码"
+            log_steam "========================================"
+            log_steam ""
+            log_steam "Please use docker attach to input code:"
+            log_steam "请使用 docker attach 输入验证码："
+            log_steam "  docker attach puppy-stardew"
+            log_steam ""
+            log_steam "After attaching, you will see the Steam Guard prompt."
+            log_steam "连接后，您将看到 Steam Guard 提示。"
+            log_steam ""
+            log_steam "Enter your Steam Guard code and press ENTER"
+            log_steam "输入您的 Steam 令牌验证码并按回车"
+            log_steam ""
+            log_steam "To detach after entering code:"
+            log_steam "输入验证码后要分离："
+            log_steam "Press Ctrl+P, then Ctrl+Q"
+            log_steam "========================================"
+
+            # Run SteamCMD in interactive mode for Steam Guard
+            log_info "Starting Steam authentication with Steam Guard..."
+            /home/steam/steamcmd/steamcmd.sh \
+                +force_install_dir /home/steam/stardewvalley \
+                +login "$STEAM_USERNAME" "$STEAM_PASSWORD" \
+                +app_update 413150 validate \
+                +quit
+
+            # Check if download was successful
+            if [ ! -f "/home/steam/stardewvalley/StardewValley" ]; then
+                log_error "Game download failed after Steam Guard verification"
+                log_error "Steam Guard 验证后游戏下载失败"
+                exit 1
+            fi
+
+            log_info "Game downloaded successfully after Steam Guard verification!"
+            log_info "Steam Guard 验证后游戏下载完成！"
+            GAME_DOWNLOADED=true
+        elif grep -q "Login Failed" /tmp/steam_download.log || \
+             grep -q "Invalid Password" /tmp/steam_download.log; then
+            log_error "Steam authentication failed. Please check your credentials."
+            log_error "Steam 认证失败。请检查您的凭证。"
             exit 1
-        fi
+        elif grep -q "ERROR (Rate Limit Exceeded)" /tmp/steam_download.log; then
+            log_error "Steam API rate limit exceeded. Waiting before retry..."
+            log_error "Steam API 速率限制。等待后重试..."
 
-        log_info "Game downloaded successfully after Steam Guard verification!"
-        log_info "Steam Guard 验证后游戏下载完成！"
-        GAME_DOWNLOADED=true
-    elif grep -q "Login Failed" /tmp/steam_download.log || \
-         grep -q "Invalid Password" /tmp/steam_download.log; then
-        log_error "Steam authentication failed. Please check your credentials."
-        log_error "Steam 认证失败。请检查您的凭证。"
-        exit 1
-    elif grep -q "ERROR (Rate Limit Exceeded)" /tmp/steam_download.log; then
-        log_error "Steam API rate limit exceeded. Waiting before retry..."
-        log_error "Steam API 速率限制。等待后重试..."
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                RETRY_COUNT=$((RETRY_COUNT + 1))
+                log_warn "Retry attempt $RETRY_COUNT of $MAX_RETRIES in $RETRY_DELAY seconds..."
+                log_warn "重试次数 $RETRY_COUNT / $MAX_RETRIES，$RETRY_DELAY 秒后..."
+                sleep $RETRY_DELAY
 
-        if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-            RETRY_COUNT=$((RETRY_COUNT + 1))
-            log_warn "Retry attempt $RETRY_COUNT of $MAX_RETRIES in $RETRY_DELAY seconds..."
-            log_warn "重试次数 $RETRY_COUNT / $MAX_RETRIES，$RETRY_DELAY 秒后..."
-            sleep $RETRY_DELAY
-
-            # Retry with exponential backoff
-            RETRY_DELAY=$((RETRY_DELAY * 2))
-            exec /home/steam/entrypoint.sh
+                # Retry with exponential backoff
+                RETRY_DELAY=$((RETRY_DELAY * 2))
+                exec /home/steam/entrypoint.sh
+            else
+                log_error "Maximum retry attempts reached due to rate limiting."
+                log_error "达到最大重试次数（速率限制）。"
+                log_error "Please wait a few hours before trying again."
+                log_error "请等待几小时后再重试。"
+                exit 1
+            fi
         else
-            log_error "Maximum retry attempts reached due to rate limiting."
-            log_error "达到最大重试次数（速率限制）。"
-            log_error "Please wait a few hours before trying again."
-            log_error "请等待几小时后再重试。"
+            log_error "Unknown error occurred during download"
+            log_error "下载过程中发生未知错误"
+            log_error "Check /tmp/steam_download.log for details"
             exit 1
         fi
-    else
-        log_error "Unknown error occurred during download"
-        log_error "下载过程中发生未知错误"
-        log_error "Check /tmp/steam_download.log for details"
-        exit 1
     fi
 fi
 
