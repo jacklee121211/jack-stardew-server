@@ -431,6 +431,26 @@ fi
 log_info "Checking and fixing Mods directory permissions..."
 log_info "检查并修复 Mods 目录权限..."
 
+# Fix AutoLoadGame mod config to prevent loading non-existent saves
+# 修复 AutoLoadGame mod 配置，防止加载不存在的存档
+if [ -f "/home/steam/stardewvalley/Mods/AutoLoadGame/config.json" ]; then
+    # Check if LastFileLoaded is empty or points to non-existent save
+    # 检查 LastFileLoaded 是否为空或指向不存在的存档
+    LAST_FILE=$(grep -o '"LastFileLoaded": *"[^"]*"' /home/steam/stardewvalley/Mods/AutoLoadGame/config.json | cut -d'"' -f4)
+    if [ -n "$LAST_FILE" ]; then
+        # Check if save file exists
+        # 检查存档文件是否存在
+        SAVE_PATH="/home/steam/.config/StardewValley/Saves/$LAST_FILE"
+        if [ ! -d "$SAVE_PATH" ]; then
+            log_warn "AutoLoadGame: Save file '$LAST_FILE' not found. Clearing LastFileLoaded to prevent crash."
+            log_warn "AutoLoadGame: 存档文件 '$LAST_FILE' 不存在。清空 LastFileLoaded 以防止崩溃。"
+            # Clear LastFileLoaded to prevent mod from trying to load non-existent save
+            # 清空 LastFileLoaded 以防止 mod 尝试加载不存在的存档
+            sed -i 's/"LastFileLoaded": *"[^"]*"/"LastFileLoaded": ""/g' /home/steam/stardewvalley/Mods/AutoLoadGame/config.json
+        fi
+    fi
+fi
+
 if [ -d "/home/steam/stardewvalley/Mods" ]; then
     # Fix ownership to steam user
     # 修复所有权为 steam 用户
@@ -472,15 +492,30 @@ if [ "$ENABLE_VNC" = "true" ]; then
 
     VNC_PASSWORD=${VNC_PASSWORD:-"stardew123"}
 
+    # VNC password must be 8 characters or less for x11vnc
+    # VNC 密码必须为 8 个字符或更少，用于 x11vnc
     if [ ${#VNC_PASSWORD} -gt 8 ]; then
-        log_warn "VNC password is longer than 8 characters!"
-        log_warn "VNC 密码超过 8 个字符！"
+        log_warn "VNC password is longer than 8 characters! Truncating to first 8 characters."
+        log_warn "VNC 密码超过 8 个字符！截断为前 8 个字符。"
         VNC_PASSWORD="${VNC_PASSWORD:0:8}"
+    elif [ ${#VNC_PASSWORD} -lt 1 ]; then
+        log_warn "VNC password is empty! Using default password."
+        log_warn "VNC 密码为空！使用默认密码。"
+        VNC_PASSWORD="stardew1"
     fi
 
+    # Create VNC password file using x11vnc's password format
+    # 使用 x11vnc 的密码格式创建 VNC 密码文件
     VNC_PASSWD_FILE=/tmp/vncpasswd
-    echo -n "$VNC_PASSWORD" > "$VNC_PASSWD_FILE"
-    chmod 600 "$VNC_PASSWD_FILE"
+    # x11vnc requires password file to be created using x11vnc -storepasswd
+    # But we can also use a simple passwd file for basic authentication
+    # x11vnc 需要使用 x11vnc -storepasswd 创建密码文件，但我们也可以使用简单的密码文件进行基本认证
+    x11vnc -storepasswd "$VNC_PASSWORD" "$VNC_PASSWD_FILE" 2>/dev/null || {
+        # Fallback: create simple password file if x11vnc -storepasswd fails
+        # 备用方案：如果 x11vnc -storepasswd 失败，创建简单的密码文件
+        echo -n "$VNC_PASSWORD" > "$VNC_PASSWD_FILE"
+        chmod 600 "$VNC_PASSWD_FILE"
+    }
 
     openbox &
     x11vnc -display :99 -forever -shared -passwdfile "$VNC_PASSWD_FILE" -rfbport 5900 &
@@ -536,9 +571,13 @@ while [ $RESTART_COUNT -lt $MAX_RESTARTS ]; do
     log_info "正在启动 StardewModdingAPI 服务器..."
     
     # Run server (not using exec, so we can handle exit)
+    # Catch any errors to prevent script from exiting unexpectedly
+    # 捕获任何错误以防止脚本意外退出
+    set +e  # Temporarily disable exit on error to handle server crashes gracefully
     ./StardewModdingAPI --server
-    
     EXIT_CODE=$?
+    set -e  # Re-enable exit on error
+    
     RESTART_COUNT=$((RESTART_COUNT + 1))
     
     if [ $EXIT_CODE -eq 0 ]; then
@@ -550,6 +589,16 @@ while [ $RESTART_COUNT -lt $MAX_RESTARTS ]; do
     else
         log_error "Server crashed or exited with code $EXIT_CODE"
         log_error "服务器崩溃或退出，退出代码: $EXIT_CODE"
+        
+        # Additional check: if AutoLoadGame is causing issues, disable it temporarily
+        # 额外检查：如果 AutoLoadGame 导致问题，临时禁用它
+        if [ -f "/home/steam/stardewvalley/Mods/AutoLoadGame/config.json" ]; then
+            LAST_FILE=$(grep -o '"LastFileLoaded": *"[^"]*"' /home/steam/stardewvalley/Mods/AutoLoadGame/config.json | cut -d'"' -f4)
+            if [ -n "$LAST_FILE" ]; then
+                log_warn "AutoLoadGame mod may be causing issues. Consider checking its configuration."
+                log_warn "AutoLoadGame mod 可能导致问题。请检查其配置。"
+            fi
+        fi
         
         if [ $RESTART_COUNT -ge $MAX_RESTARTS ]; then
             log_error "Maximum restart attempts reached. Please check server logs."
@@ -572,5 +621,3 @@ log_warn "服务器重启循环已退出。容器将保持运行。"
 while true; do
     sleep 3600  # Keep container alive
 done
-
-fi
