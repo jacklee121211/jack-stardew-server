@@ -507,16 +507,35 @@ if [ "$ENABLE_VNC" = "true" ]; then
 
     # Create VNC password file using x11vnc's password format
     # 使用 x11vnc 的密码格式创建 VNC 密码文件
+    # IMPORTANT: x11vnc -storepasswd requires an active X display
+    # 重要：x11vnc -storepasswd 需要活动的 X 显示器
     VNC_PASSWD_FILE=/tmp/vncpasswd
-    # x11vnc requires password file to be created using x11vnc -storepasswd
-    # But we can also use a simple passwd file for basic authentication
-    # x11vnc 需要使用 x11vnc -storepasswd 创建密码文件，但我们也可以使用简单的密码文件进行基本认证
-    x11vnc -storepasswd "$VNC_PASSWORD" "$VNC_PASSWD_FILE" 2>/dev/null || {
-        # Fallback: create simple password file if x11vnc -storepasswd fails
-        # 备用方案：如果 x11vnc -storepasswd 失败，创建简单的密码文件
-        echo -n "$VNC_PASSWORD" > "$VNC_PASSWD_FILE"
+    
+    # Try to create password file using x11vnc -storepasswd (requires X display)
+    # 尝试使用 x11vnc -storepasswd 创建密码文件（需要 X 显示器）
+    if x11vnc -storepasswd "$VNC_PASSWORD" "$VNC_PASSWD_FILE" >/dev/null 2>&1; then
+        log_info "VNC password file created successfully using x11vnc -storepasswd"
         chmod 600 "$VNC_PASSWD_FILE"
-    }
+    else
+        # Fallback: use expect to create password file (more reliable)
+        # 备用方案：使用 expect 创建密码文件（更可靠）
+        log_warn "x11vnc -storepasswd failed, using expect to create password file"
+        expect << EOF >/dev/null 2>&1
+spawn x11vnc -storepasswd "$VNC_PASSWORD" "$VNC_PASSWD_FILE"
+expect "Enter password:"
+send "$VNC_PASSWORD\r"
+expect "Verify password:"
+send "$VNC_PASSWORD\r"
+expect eof
+EOF
+        chmod 600 "$VNC_PASSWD_FILE"
+        
+        # Verify password file was created
+        if [ ! -f "$VNC_PASSWD_FILE" ] || [ ! -s "$VNC_PASSWD_FILE" ]; then
+            log_error "Failed to create VNC password file! VNC may not work correctly."
+            log_error "创建 VNC 密码文件失败！VNC 可能无法正常工作。"
+        fi
+    fi
 
     openbox &
     x11vnc -display :99 -forever -shared -passwdfile "$VNC_PASSWD_FILE" -rfbport 5900 &
